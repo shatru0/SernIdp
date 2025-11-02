@@ -1,0 +1,6 @@
+@SernIdp.Api_HostAddress = http://localhost:5189
+
+GET {{SernIdp.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
