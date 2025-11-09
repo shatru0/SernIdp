@@ -7,25 +7,27 @@ namespace SernIdp.Oidc.Models;
 /// </summary>
 public sealed record OidcEndpointPathOptions
 {
-    public string Authorization { get; init; } = "/connect/authorize";
+    private const string DefaultPrefix = "/oauth2";
 
-    public string Token { get; init; } = "/connect/token";
+    public string Authorization { get; init; } = $"{DefaultPrefix}/authorize";
 
-    public string UserInfo { get; init; } = "/connect/userinfo";
+    public string Token { get; init; } = $"{DefaultPrefix}/token";
 
-    public string Jwks { get; init; } = "/.well-known/jwks.json";
+    public string UserInfo { get; init; } = $"{DefaultPrefix}/userinfo";
+
+    public string Jwks { get; init; } = $"{DefaultPrefix}/.well-known/jwks.json";
 
     public string? Registration { get; init; }
 
-    public string? EndSession { get; init; } = "/connect/endsession";
+    public string? EndSession { get; init; } = $"{DefaultPrefix}/endsession";
 
-    public string? PushedAuthorization { get; init; } = "/connect/par";
+    public string? PushedAuthorization { get; init; } = $"{DefaultPrefix}/par";
 
-    public string? DeviceAuthorization { get; init; } = "/connect/device";
+    public string? DeviceAuthorization { get; init; } = $"{DefaultPrefix}/device";
 
-    public string? Introspection { get; init; } = "/connect/introspect";
+    public string? Introspection { get; init; } = $"{DefaultPrefix}/introspect";
 
-    public string? Revocation { get; init; } = "/connect/revocation";
+    public string? Revocation { get; init; } = $"{DefaultPrefix}/revocation";
 
     internal OidcEndpointUris ToAbsoluteUris(Uri issuer)
     {
@@ -47,9 +49,13 @@ public sealed record OidcEndpointPathOptions
     private static string Compose(Uri issuer, string path)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
-        return Uri.TryCreate(path, UriKind.Absolute, out var absolute)
-            ? absolute.AbsoluteUri
-            : new Uri(issuer, path).AbsoluteUri;
+        if (Uri.TryCreate(path, UriKind.Absolute, out var absolute) &&
+            !string.Equals(absolute.Scheme, Uri.UriSchemeFile, StringComparison.OrdinalIgnoreCase))
+        {
+            return absolute.AbsoluteUri;
+        }
+
+        return new Uri(issuer, path).AbsoluteUri;
     }
 
     private static string? ComposeOptional(Uri issuer, string? path)
